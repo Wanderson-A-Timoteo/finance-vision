@@ -18,7 +18,7 @@ function TransactionCard({ id, descricao, valor, tipo, categoria, dataCriacao, o
       
       <div className="transaction-actions">
         <span className={`transaction-value ${tipoClass}`}>
-          {tipo === 'Saída' ? '-' : '+'} R$ {valor.toFixed(2)}
+          {tipo === 'Saída' ? '-' : '+'} {valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
         </span>
         <button 
           className="delete-btn" 

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getData, storeData } from './helper/LocalStorage';
 import FinanceForm from './components/FinanceForm';
 import FinanceChart from './components/FinanceChart';
-import TransactionCard from './components/TransactionCard'; // 1. IMPORTAMOS O CARD AQUI
+import TransactionCard from './components/TransactionCard';
 
 function carregarEstadoInicial() {
   return getData('finance_data') || [];
@@ -12,7 +12,7 @@ function carregarEstadoInicial() {
 
 function App() {
   const [transacoes, setTransacoes] = useState(carregarEstadoInicial());
-  const [filtro, setFiltro] = useState('Todas'); // 2. NOVO ESTADO PARA O FILTRO
+  const [filtro, setFiltro] = useState('Todas');
 
   useEffect(() => {
     storeData('finance_data', transacoes);
@@ -32,7 +32,7 @@ function App() {
     setTransacoes(listaFiltrada);
   }
 
-  // --- Cálculos ---
+  // Cálculos
   const totalEntradas = transacoes
     .filter((t) => t.tipo === 'Entrada')
     .reduce((acc, t) => acc + t.valor, 0);
@@ -50,11 +50,16 @@ function App() {
       return acc;
     }, {});
 
-  // 3. LÓGICA DO FILTRO: Cria uma lista derivada baseada no botão clicado
+  // Cria uma lista derivada baseada no botão clicado
   const transacoesFiltradas = transacoes.filter((t) => {
     if (filtro === 'Todas') return true;
     return t.tipo === filtro;
   });
+
+  // Função para formatar os valores para o padrão brasileiro
+  const formatarMoeda = (valor) => {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
   return (
     <div className="App">
@@ -73,15 +78,15 @@ function App() {
         <section className="summary-container">
           <div className="summary-card total">
             <span>Saldo Total</span>
-            <h2>R$ {saldoTotal.toFixed(2)}</h2>
+            <h2>{formatarMoeda(saldoTotal)}</h2>
           </div>
           <div className="summary-card income">
             <span>Entradas</span>
-            <h2 className="text-green">R$ {totalEntradas.toFixed(2)}</h2>
+            <h2 className="text-green">{formatarMoeda(totalEntradas)}</h2>
           </div>
           <div className="summary-card expense">
             <span>Saídas</span>
-            <h2 className="text-red">R$ {totalSaidas.toFixed(2)}</h2>
+            <h2 className="text-red">{formatarMoeda(totalSaidas)}</h2>
           </div>
         </section>
 
@@ -98,7 +103,7 @@ function App() {
           </div>
         </section>
 
-        {/* 4. NOVA SEÇÃO DE HISTÓRICO COM FILTROS E TRANSACTION CARD */}
+        {/* HISTÓRICO COM FILTROS */}
         <section className="history-container">
           <div className="history-header">
             <h3>Histórico Recente</h3>
