@@ -4,26 +4,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { getData, storeData } from './helper/LocalStorage';
 import FinanceForm from './components/FinanceForm';
 import FinanceChart from './components/FinanceChart';
+import TransactionCard from './components/TransactionCard'; // 1. IMPORTAMOS O CARD AQUI
 
-/**
- * Carrega o estado inicial do LocalStorage
- */
 function carregarEstadoInicial() {
   return getData('finance_data') || [];
 }
 
 function App() {
-  // Lista de todas as transações
   const [transacoes, setTransacoes] = useState(carregarEstadoInicial());
+  const [filtro, setFiltro] = useState('Todas'); // 2. NOVO ESTADO PARA O FILTRO
 
-  // Para persistência de dados sempre que a lista mudar 
   useEffect(() => {
     storeData('finance_data', transacoes);
   }, [transacoes]);
 
-  /**
-   * Adiciona uma nova transação
-   */
   function adicionarTransacao(novaTransacao) {
     const registro = {
       ...novaTransacao,
@@ -33,17 +27,12 @@ function App() {
     setTransacoes([...transacoes, registro]);
   }
 
-  /**
-   * Remove uma transação pelo ID
-   */
   function eliminarTransacao(id) {
     const listaFiltrada = transacoes.filter((item) => item.id !== id);
     setTransacoes(listaFiltrada);
   }
 
-  /**
-   * Cálculos em Tempo Real 
-   */
+  // --- Cálculos ---
   const totalEntradas = transacoes
     .filter((t) => t.tipo === 'Entrada')
     .reduce((acc, t) => acc + t.valor, 0);
@@ -54,14 +43,18 @@ function App() {
 
   const saldoTotal = totalEntradas - totalSaidas;
 
-  // Agrupa os gastos de Saídas por categoria para o gráfico de Rosca
   const totaisPorCategoria = transacoes
     .filter((t) => t.tipo === 'Saída')
     .reduce((acc, t) => {
-      // Se a categoria ainda não existe no objeto, inicia com 0, depois soma o valor
       acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
       return acc;
     }, {});
+
+  // 3. LÓGICA DO FILTRO: Cria uma lista derivada baseada no botão clicado
+  const transacoesFiltradas = transacoes.filter((t) => {
+    if (filtro === 'Todas') return true;
+    return t.tipo === filtro;
+  });
 
   return (
     <div className="App">
@@ -77,7 +70,6 @@ function App() {
       </header>
 
       <main className="main-content">
-        {/* Cards de Totais  */}
         <section className="summary-container">
           <div className="summary-card total">
             <span>Saldo Total</span>
@@ -94,12 +86,9 @@ function App() {
         </section>
 
         <section className="dashboard-grid">
-          {/* Coluna do Formulário */}
           <div className="form-column">
             <FinanceForm onAddTransaction={adicionarTransacao} />
           </div>
-
-          {/* Gráficos */}
           <div className="chart-column">
              <FinanceChart 
                totaisPorCategoria={totaisPorCategoria}
@@ -109,20 +98,42 @@ function App() {
           </div>
         </section>
 
-        {/* Lista de Transações */}
+        {/* 4. NOVA SEÇÃO DE HISTÓRICO COM FILTROS E TRANSACTION CARD */}
         <section className="history-container">
-          <h3>Histórico Recente</h3>
+          <div className="history-header">
+            <h3>Histórico Recente</h3>
+            <div className="filter-buttons">
+              <button 
+                className={filtro === 'Todas' ? 'active' : ''} 
+                onClick={() => setFiltro('Todas')}
+              >Todas</button>
+              <button 
+                className={filtro === 'Entrada' ? 'active' : ''} 
+                onClick={() => setFiltro('Entrada')}
+              >Entradas</button>
+              <button 
+                className={filtro === 'Saída' ? 'active' : ''} 
+                onClick={() => setFiltro('Saída')}
+              >Saídas</button>
+            </div>
+          </div>
+          
           <div className="transactions-list">
-            {transacoes.length > 0 ? (
-              transacoes.map((t) => (
-                <div key={t.id} className={`transaction-item ${t.tipo.toLowerCase()}`}>
-                  <span>{t.descricao}</span>
-                  <strong>{t.tipo === 'Saída' ? '-' : ''} R$ {t.valor.toFixed(2)}</strong>
-                  <button onClick={() => eliminarTransacao(t.id)}>x</button>
-                </div>
+            {transacoesFiltradas.length > 0 ? (
+              transacoesFiltradas.map((t) => (
+                <TransactionCard 
+                  key={t.id}
+                  id={t.id}
+                  descricao={t.descricao}
+                  valor={t.valor}
+                  tipo={t.tipo}
+                  categoria={t.categoria}
+                  dataCriacao={t.dataCriacao}
+                  onDelete={eliminarTransacao}
+                />
               ))
             ) : (
-              <p className="empty-msg">Nenhuma transação registada.</p>
+              <p className="empty-msg">Nenhuma transação encontrada para este filtro.</p>
             )}
           </div>
         </section>
