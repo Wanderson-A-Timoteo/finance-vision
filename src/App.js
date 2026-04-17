@@ -3,6 +3,7 @@ import './App.css';
 import { v4 as uuidv4 } from 'uuid';
 import { getData, storeData } from './helper/LocalStorage';
 import FinanceForm from './components/FinanceForm';
+import FinanceChart from './components/FinanceChart';
 
 /**
  * Carrega o estado inicial do LocalStorage
@@ -12,7 +13,7 @@ function carregarEstadoInicial() {
 }
 
 function App() {
-  // Estado principal: Lista de todas as transações
+  // Lista de todas as transações
   const [transacoes, setTransacoes] = useState(carregarEstadoInicial());
 
   // Para persistência de dados sempre que a lista mudar 
@@ -53,6 +54,15 @@ function App() {
 
   const saldoTotal = totalEntradas - totalSaidas;
 
+  // Agrupa os gastos de Saídas por categoria para o gráfico de Rosca
+  const totaisPorCategoria = transacoes
+    .filter((t) => t.tipo === 'Saída')
+    .reduce((acc, t) => {
+      // Se a categoria ainda não existe no objeto, inicia com 0, depois soma o valor
+      acc[t.categoria] = (acc[t.categoria] || 0) + t.valor;
+      return acc;
+    }, {});
+
   return (
     <div className="App">
       <header className="header">
@@ -91,8 +101,11 @@ function App() {
 
           {/* Gráficos */}
           <div className="chart-column">
-             {/* <FinanceChart */}
-             <div className="placeholder-chart">Gráficos (Próxima Etapa)</div>
+             <FinanceChart 
+               totaisPorCategoria={totaisPorCategoria}
+               totalEntradas={totalEntradas}
+               totalSaidas={totalSaidas}
+             />
           </div>
         </section>
 
