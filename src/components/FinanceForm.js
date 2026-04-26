@@ -65,7 +65,7 @@ function FinanceForm({ onAddTransaction }) {
             type="number"
             step="0.01"
             min="0"
-            placeholder="Ex: 150.50"
+            placeholder="Ex: 150,50"
             value={formData.valor}
             onChange={handleChange}
           />
